@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vex's Writing Pad</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@300;400;700&display=swap">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #2a0d45, #6a1b9a);
+            color: white;
+            font-family: 'League Spartan', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #sidebar {
+            width: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chapter {
+            padding: 10px;
+            cursor: pointer;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+        .chapter:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        #editor {
+            flex: 1;
+            padding: 20px;
+            outline: none;
+            font-size: 18px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #3e065f, #8e24aa);
+            border: none;
+        }
+        #controls {
+            display: flex;
+            justify-content: center;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #ffffff22, #ffffff55);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: linear-gradient(135deg, #ffffff44, #ffffff88);
+        }
+        #footer {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            font-style: italic;
+            opacity: 0.7;
+        }
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 100px;
+            }
+            #controls {
+                flex-wrap: wrap;
+                width: 90%;
+            }
+            button {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <button onclick="newChapter()">+ New Chapter</button>
+        <div id="chapter-list"></div>
+    </div>
+    <div contenteditable="true" id="editor" placeholder="Start writing..."></div>
+    <div id="controls">
+        <button onclick="document.execCommand('bold')">B</button>
+        <button onclick="document.execCommand('italic')">I</button>
+        <button onclick="document.execCommand('underline')">U</button>
+        <button onclick="saveFile()">Save</button>
+        <button onclick="loadFile()">Load</button>
+    </div>
+    <div id="footer">Made by Vex</div>
+
+    <script>
+        let chapters = {};
+        let currentChapter = "Untitled";
+        
+        function newChapter() {
+            const name = prompt("Enter chapter name:") || `Chapter ${Object.keys(chapters).length + 1}`;
+            chapters[name] = "";
+            renderChapters();
+            switchChapter(name);
+        }
+
+        function renderChapters() {
+            const list = document.getElementById("chapter-list");
+            list.innerHTML = "";
+            Object.keys(chapters).forEach(name => {
+                const div = document.createElement("div");
+                div.className = "chapter";
+                div.textContent = name;
+                div.onclick = () => switchChapter(name);
+                list.appendChild(div);
+            });
+        }
+
+        function switchChapter(name) {
+            chapters[currentChapter] = document.getElementById("editor").innerHTML;
+            currentChapter = name;
+            document.getElementById("editor").innerHTML = chapters[name];
+        }
+
+        function saveFile() {
+            const content = JSON.stringify(chapters);
+            const blob = new Blob([content], { type: "application/json" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "story.json";
+            link.click();
+        }
+
+        function loadFile() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "application/json";
+            input.onchange = event => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    chapters = JSON.parse(reader.result);
+                    renderChapters();
+                    switchChapter(Object.keys(chapters)[0]);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+    </script>
+</body>
+</html>
